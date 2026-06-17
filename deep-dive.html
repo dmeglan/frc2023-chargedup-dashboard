@@ -1,0 +1,122 @@
+<!DOCTYPE html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>FRC 2023 CHARGED UP — Top Robot Design Deep Dive</title>
+<style>
+:root{--navy:#16264a;--blue:#2e5496;--blue2:#3f72c4;--ink:#1a2235;--mut:#65718a;--line:#e4e9f2;--bg:#eef2f8;--gold:#f4ad17;--card:#fff;--green:#1a9c5b;--amber:#d98300;--red:#d1495b;--purple:#6b4ec2;--teal:#0e9b9b}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:22px}
+header{background:linear-gradient(120deg,#13213f,#2e5496 65%,#3f72c4);color:#fff;border-radius:18px;padding:30px 34px;box-shadow:0 10px 30px rgba(16,32,64,.28)}
+header h1{margin:0 0 6px;font-size:27px}
+header p{margin:0;opacity:.9;font-size:14px;max-width:900px}
+.over{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:6px 22px;margin:18px 0;box-shadow:0 2px 10px rgba(30,50,90,.05)}
+.over details{border-bottom:1px solid var(--line);padding:12px 0}.over details:last-child{border-bottom:none}
+.over summary{cursor:pointer;font-weight:800;color:var(--navy);font-size:14.5px}
+.over p{margin:8px 0 2px;font-size:13.6px;color:#333}
+.controls{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;gap:9px;align-items:center;background:var(--bg);padding:12px 0;margin-bottom:6px}
+input[type=search],select{padding:9px 12px;border:1px solid var(--line);border-radius:9px;font-size:13.5px;background:#fff;color:var(--ink)}
+input[type=search]{min-width:240px;flex:1}
+.chip{padding:8px 13px;border-radius:9px;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:13px;font-weight:700;user-select:none}
+.chip.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.count{margin-left:auto;font-size:12.5px;color:var(--mut);font-weight:700}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;margin:13px 0;overflow:hidden;box-shadow:0 3px 12px rgba(30,50,90,.06)}
+.card.pick{border:2px solid var(--gold)}
+.chead{display:flex;align-items:center;gap:14px;padding:14px 18px;background:linear-gradient(90deg,#16264a,#27487f);color:#fff;cursor:pointer}
+.rank{font-size:12px;font-weight:800;background:rgba(255,255,255,.16);padding:3px 9px;border-radius:20px;white-space:nowrap}
+.rank.gold{background:var(--gold);color:#3a2c00}
+.tnum{font-size:21px;font-weight:900;letter-spacing:.3px}
+.tname{font-weight:700;font-size:15px}.trobot{opacity:.8;font-size:12.5px;font-weight:500}
+.region{opacity:.72;font-size:11.5px}
+.epaWrap{margin-left:auto;text-align:right;min-width:150px}
+.epaNum{font-size:20px;font-weight:900;line-height:1}
+.epaSub{font-size:10.5px;opacity:.8}
+.bar{height:7px;border-radius:5px;background:rgba(255,255,255,.25);margin-top:5px;overflow:hidden}
+.bar>i{display:block;height:100%;background:linear-gradient(90deg,#7fd6a6,#f4ad17)}
+.cbody{padding:4px 18px 16px;display:none}
+.card.open .cbody{display:block}
+.arch{margin:12px 0 6px;font-size:14px;font-weight:800;color:var(--blue)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px;margin:8px 0 4px}
+.sub{background:#f6f8fc;border:1px solid var(--line);border-radius:10px;padding:9px 12px}
+.sub .k{font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--mut);font-weight:800}
+.sub .v{font-size:13px;margin-top:2px}
+.vis .k{color:var(--teal)}
+.lessons{margin:10px 0 4px}
+.lessons .h{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--gold);font-weight:800;margin-bottom:5px}
+.lessons ul{margin:0;padding-left:18px}.lessons li{font-size:13px;margin:3px 0}
+.links{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px;align-items:center}
+.lk{font-size:11.5px;font-weight:700;text-decoration:none;padding:4px 10px;border-radius:7px;border:1px solid}
+.t-cad{color:#0a7d44;border-color:#9bdab9;background:#e9f8f0}
+.t-binder{color:#9a5b00;border-color:#f0c48a;background:#fdf2df}
+.t-code{color:#5a3bb0;border-color:#cdbdf0;background:#f0ebfb}
+.t-thread{color:#1f5fb0;border-color:#b8d2f0;background:#eaf2fc}
+.t-dds{color:#7a1fb0;border-color:#dcb8f0;background:#f6eafc}
+.t-video{color:#b02a37;border-color:#f0bcc2;background:#fceaec}
+.t-stats,.t-site,.t-none{color:#566;border-color:#d6deea;background:#eef2f8}
+.legend{display:flex;flex-wrap:wrap;gap:8px;font-size:11.5px;color:var(--mut);margin:6px 2px 0}
+.sec{font-size:18px;font-weight:900;color:var(--navy);margin:26px 4px 4px}
+.foot{color:var(--mut);font-size:12px;margin:18px 4px;line-height:1.6}
+@media(max-width:640px){.epaWrap{min-width:96px}.trobot{display:none}}
+</style></head><body><div class=wrap>
+<header><h1>FRC 2023 CHARGED UP — Top Robot Design Deep Dive</h1>
+<p>A study reference for effective CHARGED UP design &amp; implementation, drawn from the Spectrum 3847 CAD Collection, team CAD/code releases (Onshape / GrabCAD), and each team&#x27;s Chief Delphi reveal / CAD-release thread.</p></header>
+<div class=over id=over></div>
+<div class=controls>
+<input id=q type=search placeholder="Search team, robot, mechanism, lesson, vision…">
+<select id=arch><option value="">Archetype: all</option><option value=arm>Arm / pivot</option><option value=elevator>Elevator</option><option value=double>Double-jointed arm</option><option value=cube>Cube-capable</option><option value=ground>Ground intake</option><option value=balance>Auto-balance</option></select>
+<select id=cad><option value="">CAD: all</option><option value=cad>Onshape/GrabCAD</option><option value=binder>Tech binder</option><option value=code>Code only</option><option value=none>None public</option></select>
+<div class=chip id=pick>★ Study picks</div>
+<div class=count id=count></div></div>
+<div class=legend>Link types:
+<span class="lk t-cad">CAD</span><span class="lk t-binder">Tech binder</span><span class="lk t-code">Code</span><span class="lk t-thread">CD thread</span><span class="lk t-dds">DDS</span><span class="lk t-video">Video</span><span class="lk t-stats">Stats</span></div>
+<div id=list></div>
+<div class=sec>Additional well-documented robots for study</div>
+<div id=bonuslist></div>
+<div class=foot><b>Sources:</b> the <a href="https://cadcollection.spectrum3847.org">Spectrum 3847 CAD Collection</a> and team CAD releases (Onshape / GrabCAD), <a href="https://www.chiefdelphi.com">Chief Delphi</a> reveal / CAD-release threads, and <a href="https://www.statbotics.io">Statbotics</a> EPA &amp; records (2023 — EPA/rank backfilled once the API recovers). "Unconfirmed" = a detail was not publicly published, not that it is absent. This document is fully self-contained — all data is embedded. Built June 2026.</div>
+</div>
+<script>
+const DATA=[{"rank": 0, "team": 1678, "name": "Citrus Circuits", "robot": "Tangerine Tumbler", "region": "USA-CA", "epa": 0, "record": "", "archetype": "Elite elevator cone/cube robot; full CAD + code release", "shooter": "Cone/cube end effector for grid scoring (detail in released CAD).", "intake": "Cone/cube intake feeding the elevator (see CAD).", "indexer": "Elevator superstructure (cable/spool-tensioned; discussed in the release Q&A).", "drivetrain": "Swerve.", "vision": "Unconfirmed (check code)", "cad_label": "CD CAD & code release", "cad_url": "https://www.chiefdelphi.com/t/437632", "lessons": ["A top team's full CAD + code, with a public robot-history archive going back to 2009 \u2014 study how a program iterates year over year.", "Cable/spool elevator tensioning is a classic gotcha worth understanding from their Q&A."], "sources": [["CD CAD & code release", "https://www.chiefdelphi.com/t/437632"], ["CD reveal", "https://www.chiefdelphi.com/t/428718"]], "lt": "thread", "ltlabel": "CD thread", "src": [{"label": "CD CAD & code release", "url": "https://www.chiefdelphi.com/t/437632", "t": "thread", "tl": "CD thread"}, {"label": "CD reveal", "url": "https://www.chiefdelphi.com/t/428718", "t": "thread", "tl": "CD thread"}]}, {"rank": 0, "team": 971, "name": "Spartan Robotics", "robot": "Doffle", "region": "USA-CA", "epa": 0, "record": "", "archetype": "Tank-drive cone/cube robot \u2014 kept tank in a swerve-dominated year by choice", "shooter": "Cone/cube scoring end effector (detail in released CAD).", "intake": "Cone/cube intake (see CAD).", "indexer": "Arm/elevator superstructure (see CAD).", "drivetrain": "6-wheel TANK / west-coast drive \u2014 a deliberate choice to keep the robot to a reasonable number of degrees of freedom while everyone else went swerve.", "vision": "Unconfirmed (check CAD)", "cad_label": "Onshape CAD", "cad_url": "https://frc971.onshape.com/documents/db1b739c445de530fb406dc6/v/bc9815d549b9ffd9f7251ac8/e/e81d7e62d16fb20bf281c8e4", "lessons": ["A powerhouse team deliberately staying with tank drive is a great lesson in choosing simplicity / fewer DOFs over the trendy option.", "971's mechanical execution and packaging are worth studying regardless of drivetrain."], "sources": [["CD reveal \u2014 Doffle", "https://www.chiefdelphi.com/t/430174"]], "lt": "cad", "ltlabel": "Onshape CAD", "src": [{"label": "CD reveal \u2014 Doffle", "url": "https://www.chiefdelphi.com/t/430174", "t": "thread", "tl": "CD thread"}]}, {"rank": 0, "team": 6328, "name": "Mechanical Advantage", "robot": "(2023)", "region": "USA-MA", "epa": 0, "record": "", "archetype": "Open-Alliance, software-led; reliable-and-simple philosophy; AdvantageKit authors", "shooter": "Cone/cube end effector (mechanism detail in released CAD).", "intake": "Cone/cube intake (see CAD).", "indexer": "Arm/elevator superstructure (see CAD).", "drivetrain": "Swerve.", "vision": "Advanced logging + vision via their own AdvantageKit framework (see code).", "cad_label": "CD 2023 Open-Alliance build thread", "cad_url": "https://www.chiefdelphi.com/t/420691", "lessons": ["6328 author AdvantageKit \u2014 the reference FRC logging/replay framework; their code is the model for log-based development.", "Explicit 'reliable, relatively simple, lean into software strengths' design philosophy + full-team prototyping is worth emulating."], "sources": [["CD 2023 build thread", "https://www.chiefdelphi.com/t/420691"], ["Onshape CAD", "https://cad.onshape.com/documents/7b17c8664d1313c397a0fcf3/w/61b5c8329f7f5c6023f50c77/e/c1fa9ea103d871437961297c"]], "lt": "thread", "ltlabel": "CD thread", "src": [{"label": "CD 2023 build thread", "url": "https://www.chiefdelphi.com/t/420691", "t": "thread", "tl": "CD thread"}, {"label": "Onshape CAD", "url": "https://cad.onshape.com/documents/7b17c8664d1313c397a0fcf3/w/61b5c8329f7f5c6023f50c77/e/c1fa9ea103d871437961297c", "t": "cad", "tl": "Onshape CAD"}]}, {"rank": 0, "team": 2910, "name": "Jack in the Bot", "robot": "Phantom", "region": "USA-WA", "epa": 0, "record": "", "archetype": "Strong PNW cone/cube robot; CAD + tech binder", "shooter": "Cone/cube scoring end effector (full detail in the tech binder).", "intake": "Cone/cube intake (tech binder).", "indexer": "Arm/elevator superstructure (tech binder).", "drivetrain": "Swerve.", "vision": "Unconfirmed (check binder)", "cad_label": "CD CAD & tech binder release", "cad_url": "https://www.chiefdelphi.com/t/436653", "lessons": ["Ships both Onshape and STEP/Parasolid plus a tech binder \u2014 a complete, clone-friendly documentation set.", "A well-documented benchmark PNW robot to compare against the elevator/arm field."], "sources": [["CD CAD & tech binder", "https://www.chiefdelphi.com/t/436653"]], "lt": "thread", "ltlabel": "CD thread", "src": [{"label": "CD CAD & tech binder", "url": "https://www.chiefdelphi.com/t/436653", "t": "thread", "tl": "CD thread"}]}, {"rank": 0, "team": 1114, "name": "Simbotics", "robot": "Simbot Scizor", "region": "CAN-ON", "epa": 0, "record": "", "archetype": "Design-process leaders; CAD + code + reusable base", "shooter": "Cone/cube scoring end effector (detail in released CAD).", "intake": "Cone/cube intake (see CAD).", "indexer": "Arm/elevator superstructure (see CAD).", "drivetrain": "Swerve.", "vision": "Unconfirmed (check code)", "cad_label": "CD CAD & code release", "cad_url": "https://www.chiefdelphi.com/t/447607", "lessons": ["Released the robot CAD plus Simbot-Base \u2014 a maintained starter code base with up-to-date utilities to bootstrap a season fast.", "1114 are long-standing design-process mentors; study their packaging and conventions."], "sources": [["CD CAD & code release", "https://www.chiefdelphi.com/t/447607"], ["Code \u2014 Simbotics/2023-Simbot-Scizor", "https://github.com/Simbotics/2023-Simbot-Scizor"]], "lt": "thread", "ltlabel": "CD thread", "src": [{"label": "CD CAD & code release", "url": "https://www.chiefdelphi.com/t/447607", "t": "thread", "tl": "CD thread"}, {"label": "Code \u2014 Simbotics/2023-Simbot-Scizor", "url": "https://github.com/Simbotics/2023-Simbot-Scizor", "t": "code", "tl": "Code (GitHub)"}]}, {"rank": 0, "team": 695, "name": "Bison Robotics", "robot": "Goldmodule", "region": "USA-ND", "epa": 0, "record": "", "archetype": "Swerve cone/cube robot; public code + a swerve-CAD teaching resource", "shooter": "Cone/cube scoring end effector (see CAD).", "intake": "Cone/cube intake (see CAD).", "indexer": "Arm/elevator superstructure (see CAD).", "drivetrain": "Swerve; code developed in public, conventions carried from Rapid React.", "vision": "Offseason vision/odometry code rewrite (see GitHub).", "cad_label": "CD CAD & code release", "cad_url": "https://www.chiefdelphi.com/t/446357", "lessons": ["They published a parametric, template-part-based MK4i swerve SOLIDWORKS tutorial series \u2014 an outstanding learn-to-CAD-swerve resource.", "Developing code in public + documenting offseason swerve/vision rewrites is a model for continuous learning."], "sources": [["CD CAD & code release", "https://www.chiefdelphi.com/t/446357"], ["Code \u2014 FRCTeam695", "https://github.com/FRCTeam695"]], "lt": "thread", "ltlabel": "CD thread", "src": [{"label": "CD CAD & code release", "url": "https://www.chiefdelphi.com/t/446357", "t": "thread", "tl": "CD thread"}, {"label": "Code \u2014 FRCTeam695", "url": "https://github.com/FRCTeam695", "t": "code", "tl": "Code (GitHub)"}]}, {"rank": 0, "team": 3005, "name": "RoboChargers", "robot": "AMP", "region": "USA-TX", "epa": 0, "record": "", "archetype": "Cone/cube robot with a widely-praised end effector", "shooter": "A cone/cube end effector that drew a lot of community praise on reveal ('Holy end effector!') \u2014 study its grip/geometry in the released CAD.", "intake": "Cone/cube intake integrated with the end effector (see CAD).", "indexer": "Arm/elevator superstructure (see CAD).", "drivetrain": "Swerve.", "vision": "Unconfirmed (check CAD)", "cad_label": "Onshape CAD", "cad_url": "https://cad.onshape.com/documents/230339548ba1828471e00cef/w/7608c62ea34bc84ee4acccd6/e/6a002e572ec5e1812bae3918", "lessons": ["A standout, much-admired end effector \u2014 a great single-mechanism study for handling both cones and cubes.", "Reverse-engineer the released Onshape to see how one gripper manages two very different game pieces."], "sources": [["CD reveal \u2014 AMP", "https://www.chiefdelphi.com/t/428495"]], "lt": "cad", "ltlabel": "Onshape CAD", "src": [{"label": "CD reveal \u2014 AMP", "url": "https://www.chiefdelphi.com/t/428495", "t": "thread", "tl": "CD thread"}]}, {"rank": 0, "team": 2767, "name": "Stryke Force", "robot": "Snake Eyes", "region": "USA-MI", "epa": 0, "record": "", "archetype": "Cone/cube robot with an operator-friendly vision-align indicator", "shooter": "Cone/cube scoring end effector (see CAD).", "intake": "Cone/cube intake (see CAD).", "indexer": "Arm/elevator superstructure (see CAD).", "drivetrain": "Swerve.", "vision": "Camera auto-align to the grid, with a light-up indicator that turns on when the camera alignment engages \u2014 a clean driver-feedback idea.", "cad_label": "Onshape CAD", "cad_url": "https://cad.onshape.com/documents/04a54b2035c31e128e1dfced/w/505caf917c2302fdb0b5bdd9/e/4c7eedc3e2c9f9a4836827bf", "lessons": ["A visible status light tied to vision auto-align is a simple, high-value human-factors touch worth copying.", "Study how the alignment indicator integrates with the scoring cycle."], "sources": [["CD reveal \u2014 Snake Eyes", "https://www.chiefdelphi.com/t/429639"]], "lt": "cad", "ltlabel": "Onshape CAD", "src": [{"label": "CD reveal \u2014 Snake Eyes", "url": "https://www.chiefdelphi.com/t/429639", "t": "thread", "tl": "CD thread"}]}, {"rank": 0, "team": 1706, "name": "Ratchet Rockers", "robot": "Whiplash", "region": "USA-MO", "epa": 0, "record": "", "archetype": "Cone/cube robot with a grid-registering frame", "shooter": "Cone/cube scoring end effector (see CAD).", "intake": "Cone/cube intake (see CAD).", "indexer": "Arm/elevator superstructure (see CAD).", "drivetrain": "Swerve.", "vision": "Unconfirmed (check CAD)", "cad_label": "Onshape CAD", "cad_url": "https://cad.onshape.com/documents/80bfb649a2c78e4c6edec3d3/w/6b74b6511ba0a48d4efc8200/e/9dac5cbb17ec4689a721dff4", "lessons": ["A slightly OCTAGONAL frame perimeter lets them jam the bumper into the grid to register/line up for scoring \u2014 a clever passive-alignment trick.", "Study how frame geometry can do alignment work that would otherwise need sensors."], "sources": [["CD reveal \u2014 Whiplash", "https://www.chiefdelphi.com/t/429353"]], "lt": "cad", "ltlabel": "Onshape CAD", "src": [{"label": "CD reveal \u2014 Whiplash", "url": "https://www.chiefdelphi.com/t/429353", "t": "thread", "tl": "CD thread"}]}, {"rank": 0, "team": 118, "name": "Robonauts", "robot": "Echo", "region": "USA-TX", "epa": 0, "record": "", "archetype": "Cone/cube robot; also the FRC Everybot authors", "shooter": "Cone/cube scoring end effector (detail in the released GrabCAD).", "intake": "Cone/cube intake (see CAD).", "indexer": "Arm/elevator superstructure (see CAD).", "drivetrain": "Swerve.", "vision": "Unconfirmed (check CAD)", "cad_label": "GrabCAD \u2014 Echo", "cad_url": "https://grabcad.com/library/robonauts-118-2023-robot-echo-1", "lessons": ["118 lead the Everybot program \u2014 the canonical low-cost, accessible CHARGED UP design many rookies build.", "Compare their full comp robot 'Echo' against the simplified Everybot to see design trade-offs."], "sources": [["GrabCAD \u2014 Echo", "https://grabcad.com/library/robonauts-118-2023-robot-echo-1"], ["CD reveal video", "https://www.chiefdelphi.com/t/429565"]], "lt": "cad", "ltlabel": "GrabCAD", "src": [{"label": "GrabCAD \u2014 Echo", "url": "https://grabcad.com/library/robonauts-118-2023-robot-echo-1", "t": "cad", "tl": "GrabCAD"}, {"label": "CD reveal video", "url": "https://www.chiefdelphi.com/t/429565", "t": "thread", "tl": "CD thread"}]}], BONUS=[], MAX=1, OV=[["The game", "CHARGED UP is a cone-and-cube game: robots collect CONES and CUBES from the floor or the SINGLE/DOUBLE SUBSTATIONS and score them on the GRID's three rows (hybrid, mid, high) for links and a co-op bonus, then in the endgame DOCK and ENGAGE on the CHARGE STATION. Most elite designs paired a fast cone/cube cycle (an arm or elevator + a cone-and-cube-capable end effector) with reliable auto-balance; many top teams ran a telescoping or double-jointed arm and treated triple-balance/links as the high-value targets."], ["How to use this document", "These are the most thoroughly-documented CHARGED UP robots from the CAD-release set, each with real subsystem detail mined from the team's Chief Delphi reveal/release thread. For every team we capture archetype, the four subsystems (shooter / intake / indexer / drivetrain), vision, public CAD availability, and 'lessons for students'. \u2605 marks the curated study picks with the richest reproducible documentation. EPA / rank are pending a Statbotics API outage and will be backfilled when it recovers."]];
+const PICKS=new Set([118, 695, 971, 1114, 1678, 1706, 2767, 2910, 3005, 6328]);
+document.getElementById('over').innerHTML=OV.map((o,i)=>`<details ${i==0?'open':''}><summary>${o[0]}</summary><p>${o[1]}</p></details>`).join('');
+function archMatch(a,f){a=(a||'').toLowerCase();if(!f)return true;if(f=='balance')return a.includes('balance')||a.includes('dock')||a.includes('engage')||a.includes('charge station');if(f=='ground')return a.includes('ground')||a.includes('floor');if(f=='double')return a.includes('double-jointed')||a.includes('double jointed')||a.includes('dual');return a.includes(f);}
+function card(d){
+  const pick=PICKS.has(d.team);
+  const w=Math.round((d.epa||0)/MAX*100);
+  const subs=[['Scoring (cone / cube)',d.shooter],['Intake',d.intake],['Arm / elevator',d.indexer],['Drivetrain',d.drivetrain]];
+  const head = d.cad_url
+    ? `<a class="lk t-${d.lt}" href="${d.cad_url}" target=_blank rel=noopener>${d.ltlabel}: ${d.cad_label} ↗</a>`
+    : `<span class="lk t-${d.lt}">${d.cad_label}</span>`;
+  const links=[head]
+    .concat((d.src||[]).map(s=>`<a class="lk t-${s.t}" href="${s.url}" target=_blank rel=noopener>${s.label} ↗</a>`)).join('');
+  return `<div class="card ${pick?'pick':''}" data-arch="${(d.archetype||'').toLowerCase()}" data-cad="${d.lt}" data-blob="${(d.team+' '+d.name+' '+d.robot+' '+d.archetype+' '+d.shooter+' '+d.intake+' '+d.indexer+' '+d.vision+' '+(d.lessons||[]).join(' ')+' '+d.region).toLowerCase().replace(/"/g,'')}" data-pick="${pick?1:0}">
+   <div class=chead onclick="this.parentNode.classList.toggle('open')">
+     <span class="rank ${pick?'gold':''}">${pick?'★ Study pick':'Profile'}</span>
+     <div><div class=tnum>${d.team} <span class=tname>${d.name}</span> <span class=trobot>${d.robot||''}</span></div><div class=region>${d.region}</div></div>
+     <div class=epaWrap><div class=epaNum>${d.epa||'—'}</div><div class=epaSub>${d.epa?('EPA · '+d.record):'EPA pending'}</div>${d.epa?`<div class=bar><i style="width:${w}%"></i></div>`:''}</div>
+   </div>
+   <div class=cbody>
+     <div class=arch>${d.archetype}</div>
+     <div class=grid>${subs.map(s=>`<div class=sub><div class=k>${s[0]}</div><div class=v>${s[1]}</div></div>`).join('')}
+        <div class="sub vis"><div class=k>Vision</div><div class=v>${d.vision}</div></div></div>
+     <div class=lessons><div class=h>Lessons for students</div><ul>${(d.lessons||[]).map(l=>`<li>${l}</li>`).join('')}</ul></div>
+     <div class=links>${links}</div>
+   </div></div>`;
+}
+document.getElementById('bonuslist').innerHTML=BONUS.map(card).join('');
+function render(){
+  const q=document.getElementById('q').value.toLowerCase(), af=document.getElementById('arch').value, cf=document.getElementById('cad').value, po=document.getElementById('pick').classList.contains('on');
+  let n=0;
+  document.querySelectorAll('#list .card').forEach(c=>{
+    let ok=true;
+    if(q&&!c.dataset.blob.includes(q))ok=false;
+    if(af&&!archMatch(c.dataset.arch,af))ok=false;
+    if(cf&&c.dataset.cad!=cf)ok=false;
+    if(po&&c.dataset.pick!='1')ok=false;
+    c.style.display=ok?'':'none'; if(ok)n++;
+  });
+  document.getElementById('count').textContent=n+' teams';
+}
+document.getElementById('list').innerHTML=DATA.map(card).join('');
+['q','arch','cad'].forEach(id=>document.getElementById(id).addEventListener('input',render));
+document.getElementById('pick').onclick=function(){this.classList.toggle('on');render();};
+// open the study picks by default
+document.querySelectorAll('#list .card.pick, #bonuslist .card.pick').forEach(c=>c.classList.add('open'));
+render();
+</script></body></html>
